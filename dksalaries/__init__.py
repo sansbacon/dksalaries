@@ -1,0 +1,1 @@
+from .dksalaries import Scraper, Parser
