@@ -22,12 +22,15 @@ Example:
 """
 
 import logging
-from typing import List
+import re
+from typing import Dict, List
 
-from requests_html import HTMLSession
 import browser_cookie3
+import cattr
+from requests_html import HTMLSession
 
 from .constants import *
+from .util import *
 
 
 
@@ -122,6 +125,7 @@ class Parser:
 
     def __init__(self):
         logging.getLogger(__file__).addHandler(logging.NullHandler())
+        self.c = cattr.GenConverter(forbid_extra_keys=True)
 
     def _competition(self, competition):
         """Parses competition"""
@@ -158,6 +162,14 @@ class Parser:
 
         """
         return [c for c in contests if c['gameType'] == 'Classic']
+
+    def cattr_example(self, contests):
+        """Example of how to use cattr
+        
+        """
+        odata = {camel_to_snake(k): v for k, v in contests.items()}
+        o = self.c.structure_attrs_fromdict(odata, Contests)
+
 
 
     def contest_draftgroups(self, data):
