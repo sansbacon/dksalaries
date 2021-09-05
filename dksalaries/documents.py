@@ -5,9 +5,11 @@
 
 """documents.py: object model for draftkings API"""
 
+import inspect
+import logging
 from typing import Any, Dict, List
 
-import attr
+import attr, cattr
 
 
 @attr.s(auto_attribs=True)
@@ -229,14 +231,27 @@ class PlayerDocument:
     player_image160: str = None
     alt_player_image50: str = None
     alt_player_image160: str = None
-    draft_stat_attributes: List = None
-    player_attributes: List = None
-    team_league_season_attributes: List = None
-    player_game_attributes: List = None
-    draft_alerts: List = None
+    draft_stat_attributes: List = attr.Factory(list)
+    player_attributes: List = attr.Factory(list)
+    team_league_season_attributes: List = attr.Factory(list)
+    player_game_attributes: List = attr.Factory(list)
+    draft_alerts: List = attr.Factory(list)
     player_game_hash: str = None
-    competition: List = None
-    competitions: List = None
+    competition: List = attr.Factory(list)
+    competitions: List = attr.Factory(list)
+
+
+@attr.s(auto_attribs=True)
+class PlayerSalaryDocument:
+    draftable_id: int
+    player_id: int
+    player_dk_id: int
+    first_name: str
+    last_name: str
+    display_name: str
+    team_abbreviation: str
+    position: str
+    salary: int
 
 
 @attr.s(auto_attribs=True)
@@ -249,4 +264,15 @@ class DraftablesDocument:
     player_game_attributes: List = attr.Factory(list)
     error_status: List = attr.Factory(list)
 
+    def player_salaries(self) -> List[PlayerSalaryDocument]:
+        """Converts PlayerDocument to PlayerSalaryDocument
+        
+        Args:
+            None
 
+        Returns:
+            List[PlayerSalaryDocument]
+
+        """
+        return [cattr.structure(cattr.unstructure(o), PlayerSalaryDocument) 
+                for o in self.draftables] 

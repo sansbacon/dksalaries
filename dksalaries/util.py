@@ -2,8 +2,11 @@
 # -*- coding: utf-8 -*-
 # Copyright (C) 2021 Eric Truett
 # Licensed under the MIT License
-
+import collections
+from inspect import getmembers
 import re
+from types import FunctionType
+
 
 
 def attr_boiler(d: dict) -> None:
@@ -39,6 +42,13 @@ def camel_to_snake(s: str) -> str:
     """
     name = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', s)
     return re.sub('([a-z0-9])([A-Z])', r'\1_\2', s).lower()
+
+
+def map_nested_dicts(ob, func):
+    if isinstance(ob, collections.Mapping):
+        return {func(k): v for k, v in ob.iteritems()}
+    else:
+        return func(ob)
 
 
 def striptype(v):
