@@ -20,7 +20,7 @@ Example:
     sals = {i['name]: i['salary] for i in pool}
 
 """
-
+import logging
 from typing import List
 
 import browser_cookie3
@@ -108,7 +108,16 @@ class Parser:
     """Parse DK site for data"""
 
     def container_objects(self, l: list, cls: Any) -> List[Any]:
-        """Creates container of the specified object"""
+        """Creates container of the specified object
+        
+        Args:
+            l (list): the container
+            cls (Any): the class to create
+
+        Returns:
+            List[Any] - list of the specified class
+
+        """
         newvalues = []
         for item in l:
             d = {camel_to_snake(k): v for k, v in item.items() if v is not None}
@@ -116,20 +125,44 @@ class Parser:
             newvalues.append(obj)
         return newvalues
 
+    def draftables(self, data: dict) -> DraftablesDocument:
+        """Parses draftables document
+        
+        Args:
+            data (dict): the draftables document
+
+        Returns
+            DraftablesDocument
+      
+        """
+        # fix the key names
+        newd = {camel_to_snake(k): v for k, v in data.items() if v is not None}
+
+        # pull out the containers
+        mapping = {
+          'draftables': PlayerDocument
+        }
+
+        popped = {k: newd.pop(k) for k in mapping}        
+
+        # create the object
+        o = cattr.structure_attrs_fromdict(newd, DraftablesDocument)
+        
+        # now replace the containers with the correct objects
+        for k, v in mapping.items():
+            setattr(o, k, self.container_objects(popped[k], v))
+
+        return o
+
+
     def getcontests(self, data: dict) -> GetContestsDocument:
         """Parses getcontests document
         
         Args:
-            data (dict): the parsed getcontests document
+            data (dict): the getcontests document
 
         Returns
             GetContestsDocument
-
-        contests: List[ContestDocument]
-        tournaments: List[TournamentDocument]
-        draft_groups: List[DraftGroupsDocument]
-        game_sets: List[GameSetDocument]
-        game_types: List[GameTypeDocument]
 
         """
         # fix the key names

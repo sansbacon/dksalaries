@@ -10,14 +10,12 @@ import pandas as pd
 import pytest
 
 from dksalaries import Parser
-from dksalaries.documents import ContestDocument, GetContestsDocument
+from dksalaries.documents import ContestDocument, DraftablesDocument, GetContestsDocument
 
 
-#@pytest.fixture
-
-
-#def test_...(a):
-#    assert a.mycontests_path.is_file()
+@pytest.fixture
+def draftables_document(test_directory):
+    return json.loads((test_directory / 'data' / 'draftables.json').read_text())
 
 
 @pytest.fixture
@@ -34,8 +32,15 @@ def test_contests(getcontests_document):
         assert isinstance(converter.structure(d, ContestDocument), ContestDocument)
 
 
-def test_getcontests(getcontests_document, tprint):
+def test_getcontests(getcontests_document):
     """Testing structure of getcontest"""
     p = Parser()
     o = p.getcontests(getcontests_document)
     assert isinstance(o, GetContestsDocument)
+
+
+def test_draftables(draftables_document, tprint):
+    """Testing structure of getcontest"""
+    p = Parser()
+    o = p.draftables(draftables_document)
+    assert isinstance(o, DraftablesDocument)

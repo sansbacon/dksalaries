@@ -102,8 +102,8 @@ class GameStyleDocument:
 @attr.s(auto_attribs=True)
 class GameSetDocument:   
     game_set_key: str
-    competitions: List[CompetitionDocument]
-    game_styles: List[GameStyleDocument]
+    competitions: List[CompetitionDocument] = attr.Factory(list)
+    game_styles: List[GameStyleDocument] = attr.Factory(list)
     contest_start_time_suffix: Any = None
     sort_order: int = None
     min_start_time: str = None
@@ -113,13 +113,13 @@ class GameSetDocument:
 @attr.s(auto_attribs=True)
 class GameTypeDocument:   
     game_type_id: int
-    name: str
-    description: str
-    tag: str
     sport_id: int
-    draft_type: str
-    game_style: List[GameStyleDocument]
-    is_season_long: bool
+    name: str
+    description: str = None
+    tag: str = None
+    draft_type: str = None
+    game_style: List[GameStyleDocument] = attr.Factory(list)
+    is_season_long: bool = False
 
 
 @attr.s(auto_attribs=True)
@@ -186,12 +186,12 @@ class DraftGroupDocument:
 
 @attr.s(auto_attribs=True)
 class GetContestsDocument:   
-    contests: List[ContestDocument] = None
-    tournaments: List[TournamentDocument] = None
-    draft_groups: List[DraftGroupDocument] = None
-    game_sets: List [GameSetDocument] = None
-    game_types: List [GameTypeDocument] = None
-    user_prizes: List[Any] = None
+    contests: List[ContestDocument] = attr.Factory(list)
+    tournaments: List[TournamentDocument] = attr.Factory(list)
+    draft_groups: List[DraftGroupDocument] = attr.Factory(list)
+    game_sets: List [GameSetDocument] = attr.Factory(list)
+    game_types: List [GameTypeDocument] = attr.Factory(list)
+    user_prizes: List[Any] = attr.Factory(list)
     marketing_offers: Any = None
     direct_challenge_modal: Any = None
     deposit_transaction: Any = None
@@ -216,37 +216,37 @@ class PlayerDocument:
     short_name: str
     player_id: int
     player_dk_id: int
+    team_id: int
+    team_abbreviation: str
     position: str
     roster_slot_id: int
     salary: int
     status: str
-    is_swappable: bool
-    is_disabled: bool
-    news_status: str
-    player_image50: str
-    player_image160: str
-    alt_player_image50: str
-    alt_player_image160: str
-    competition: List
-    competitions: List
-    draft_stat_attributes: List
-    player_attributes: List
-    team_league_season_attributes: List
-    player_game_attributes: List
-    team_id: int
-    team_abbreviation: str
-    draft_alerts: List
-    player_game_hash: str
+    is_swappable: bool = False
+    is_disabled: bool = False
+    news_status: str = None
+    player_image50: str = None
+    player_image160: str = None
+    alt_player_image50: str = None
+    alt_player_image160: str = None
+    draft_stat_attributes: List = None
+    player_attributes: List = None
+    team_league_season_attributes: List = None
+    player_game_attributes: List = None
+    draft_alerts: List = None
+    player_game_hash: str = None
+    competition: List = None
+    competitions: List = None
 
 
 @attr.s(auto_attribs=True)
 class DraftablesDocument:   
-    draftables: List[PlayerDocument]
-    competitions: List[CompetitionDocument]
-    teams_without_competitions: List
-    draft_alerts: List
-    draft_stats: List
-    player_game_attributes: List
-    error_status: List
+    draftables: List[PlayerDocument] = attr.Factory(list)
+    competitions: List[CompetitionDocument] = attr.Factory(list)
+    teams_without_competitions: List = attr.Factory(list)
+    draft_alerts: List = attr.Factory(list)
+    draft_stats: List = attr.Factory(list)
+    player_game_attributes: List = attr.Factory(list)
+    error_status: List = attr.Factory(list)
 
 
