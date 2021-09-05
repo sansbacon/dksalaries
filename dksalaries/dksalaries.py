@@ -21,17 +21,15 @@ Example:
 
 """
 
-import logging
-import re
-from typing import Dict, List
+from typing import List
 
 import browser_cookie3
 import cattr
 from requests_html import HTMLSession
 
 from .constants import *
+from .documents import *
 from .util import *
-
 
 
 class Scraper:
@@ -45,9 +43,7 @@ class Scraper:
         dt = s.draftables(dgid)
 
     """
-
     def __init__(self):
-        logging.getLogger(__file__).addHandler(logging.NullHandler())
         self.s = HTMLSession()
         self.s.headers.update({
             'Connection': 'keep-alive',
@@ -71,23 +67,6 @@ class Scraper:
     def base_params(self):
         return {'format': 'json'}
 
-    def _embed_params(self, embed_type):
-        return dict(**self.base_params, **{'embed': embed_type})
-
-    def contests(self, sport='NFL'):
-        """
-        Gets dk contests
-
-        Args:
-            sport(str): default 'nfl'
-
-        Returns:
-            dict
-
-        """
-        url = "https://www.draftkings.com/lobby/getcontests"
-        return self.get_json(url, params={'sport': sport})
-
     def draftables(self, dgid):
         """
         Gets draftables JSON
@@ -102,6 +81,20 @@ class Scraper:
         url = self.api_url + f'draftgroups/v1/draftgroups/{dgid}/draftables?'
         return self.get_json(url, params=self.base_params)
 
+    def getcontests(self, sport='NFL'):
+        """
+        Gets dk contests
+
+        Args:
+            sport(str): default 'nfl'
+
+        Returns:
+            dict
+
+        """
+        url = "https://www.draftkings.com/lobby/getcontests"
+        return self.get_json(url, params={'sport': sport})
+
     def get_json(self, url, params, headers=None, response_object=False):
         """Gets json resource"""
         headers = headers if headers else {}
@@ -114,43 +107,56 @@ class Scraper:
 class Parser:
     """Parse DK site for data"""
 
-    GAME_TYPES = {
-        "Showdown Captain Mode": 96,
-        "Classic": 1,
-    }
+    def container_objects(self, l: list, cls: Any) -> List[Any]:
+        """Creates container of the specified object"""
+        newvalues = []
+        for item in l:
+            d = {camel_to_snake(k): v for k, v in item.items() if v is not None}
+            obj = cattr.structure_attrs_fromdict(d, cls)
+            newvalues.append(obj)
+        return newvalues
 
-    PLAYERPOOL_FIELDS = [
-        'draftableId', 'playerId', 'firstName', 'lastName', 
-        'displayName',  'position', 'teamAbbreviation', 'salary']
+    def getcontests(self, data: dict) -> GetContestsDocument:
+        """Parses getcontests document
+        
+        Args:
+            data (dict): the parsed getcontests document
 
-    def __init__(self):
-        logging.getLogger(__file__).addHandler(logging.NullHandler())
-        self.c = cattr.GenConverter(forbid_extra_keys=True)
+        Returns
+            GetContestsDocument
 
-    def _competition(self, competition):
-        """Parses competition"""
-        wanted = ['GameId', 'StartDate', 'HomeTeamId', 'HomeTeamName', 'AwayTeamId', 'AwayTeamName']
-        return {k: v for k, v in competition.items() if k in wanted}
+        contests: List[ContestDocument]
+        tournaments: List[TournamentDocument]
+        draft_groups: List[DraftGroupsDocument]
+        game_sets: List[GameSetDocument]
+        game_types: List[GameTypeDocument]
 
-    def _gameset(self, gameset):
-        """Parses gameset"""
-        # get top-level keys
-        wanted = ['GameSetKey', 'MinStartTime', 'ContestStartTimeSuffix', 'Tag']
-        gset = {k: v for k, v in gameset.items() if k in wanted}
-    
-        # parse gamestyles subresource
-        gset['gamestyles'] = [self._gamestyle(item) for item in gameset['GameStyles']]
+        """
+        # fix the key names
+        newd = {camel_to_snake(k): v for k, v in data.items() if v is not None}
 
-        # parse competitions subresource
-        gset['competitions'] = [self._competition(item) for item in gameset['Competitions']]
+        # pull out the containers
+        mapping = {
+          'contests': ContestDocument,
+          'tournaments': TournamentDocument,
+          'draft_groups': DraftGroupDocument,
+          'game_sets': GameSetDocument,
+          'game_types': GameTypeDocument
+        }
 
-        return gset
+        popped = {k: newd.pop(k) for k in mapping}
 
-    def _gamestyle(self, gamestyle):
-        """Parses gamestyle"""
-        wanted = ['GameStyleId', 'Name', 'Abbreviation']
-        return {k: v for k, v in gamestyle.items() if k in wanted}
+        # create the object
+        o = cattr.structure_attrs_fromdict(newd, GetContestsDocument)
+        
+        # now replace the containers with the correct objects
+        for k, v in mapping.items():
+            setattr(o, k, self.container_objects(popped[k], v))
 
+        return o
+
+
+    '''
     def classic_contests(self, contests: List[dict]) -> List[dict]:
         """Gets classic contests
         
@@ -259,3 +265,4 @@ class Parser:
     def salary_draftgroups(self, data, sport='NFL', game_type='Classic'):
         """Parses draftgroups for salary contests"""
         return [i for i in data['DraftGroups'] if i['Sport'] == sport and i['GameTypeId'] == 1]
+    '''

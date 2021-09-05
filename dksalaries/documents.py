@@ -5,137 +5,21 @@
 
 """documents.py: object model for draftkings API"""
 
-import logging
 from typing import Any, Dict, List
 
 import attr
 
-logging.getLogger(__file__).addHandler(logging.NullHandler())
-
 
 @attr.s(auto_attribs=True)
 class AttributesDocument:
+    type: str = None
+    type_id: int = None
     id: int = None
     name: str = None
-    type_id: int = None
-    type: str
     value: str = None
     filterable: bool = True
     sort_value: str = None
     prompt: str = None
-
-
-@attr.s(auto_attribs=True)
-class CompetitionDocument:
-    game_id: int
-    away_team_id: int
-    home_team_id: int
-    home_team_score: int
-    away_team_score: int
-    home_team_city: str
-    away_team_city: str
-    home_team_name: str
-    away_team_name: str
-    start_date: str
-    location: str
-    last_play: Any
-    team_with_possession: int
-    time_remaining_status: str
-    sport: str
-    status: str
-    description: str
-    full_description: str
-    exceptional_messages: List
-    series_type: int
-    number_of_games_in_series: int
-    series_info: Any
-    home_team_competition_ordinal: int
-    away_team_competition_ordinal: int
-    home_team_competition_count: int
-    away_team_competition_count: int
-
-
-@attr.s(auto_attribs=True)
-class ContestsDocument:   
-    contests: List[ContestDocument]
-    tournaments: List[TournamentDocument]
-    draft_groups: List[DraftGroupsDocument]
-    game_sets: List[GameSetDocument]
-    game_types: List[GameTypeDocument]
-
-
-@attr.s(auto_attribs=True)
-class ContestDocument:   
-	uc: int
-	ec: int
-	mec: int
-	fpp: int
-	s: int
-	n: str
-	attr: Dict
-	nt: int
-	m: int
-	a: int
-	po: float
-	pd: Dict
-	tix: bool
-	sdstring: str
-	sd: str
-	id: int
-	tmpl: int
-	pt: int
-	so: int
-	fwt: bool
-	is_owner: bool
-	start_time_type: int
-	dg: int
-	ulc: int
-	cs: int
-	game_type: str
-	ssd: None
-	dgpo: float
-	cso: int
-	ir: int
-	rl: bool
-	rlc: int
-	rll: int
-	sa: bool
-	free_with_crowns: bool
-	crown_amount: int
-	is_bonus_finalized: bool
-	is_snake_draft: bool
-
-
-@attr.s(auto_attribs=True)
-class DraftablesDocument:   
-    draftables: List[PlayerDocument]
-    competitions: List[CompetitionDocument]
-    teams_without_competitions: List
-    draft_alerts: List
-    draft_stats: List
-    player_game_attributes: List
-    error_status: List
-
-
-@attr.s(auto_attribs=True)
-class DraftGroupDocument:   
-    draft_group_id: int
-    contest_type_id: int
-    start_date: str
-    start_date_est: str
-    sort_order: int
-    draft_group_tag: str
-    game_type_id: int
-    game_type: Any
-    sport_sort_order: int
-    sport: str
-    game_count: int
-    contest_start_time_suffix: Any
-    contest_start_time_type: int
-    games: Any
-    draft_group_series_id: int
-    game_set_key: str
-    allow_ugc: bool
 
 
 @attr.s(auto_attribs=True)
@@ -147,26 +31,83 @@ class DraftStatsDocument:
     
 
 @attr.s(auto_attribs=True)
-class GameSetDocument:   
-    game_set_key: str
-    contest_start_time_suffix: Any
-    competitions: List[CompetitionDocument]
-    game_styles: List[GameStyleDocument]
+class TournamentDocument:   
+    tournament_key: str
+    name: str
+    draft_group_id: int
+    is_visible: bool
     sort_order: int
-    min_start_time: str
-    tag: str
+    status: int
+    entrants: int
+    contest_attributes: List
+    maximum_entries: int
+    maximum_entries_per_user: int
+    entry_fee: float
+    accepted_tickets: List
+    total_payouts: float
+    payout_descriptions: List
+    fpp_award: int
+    payout_summaries: List
+    sport_id: int
+    crown_amount: int
+    ticket_only_entry: bool
+    start_time: str
+    start_time_type: str
+    game_set_key: str
+
+
+@attr.s(auto_attribs=True)
+class CompetitionDocument:
+    game_id: int = None
+    away_team_id: int = None
+    home_team_id: int = None
+    home_team_score: int = None
+    away_team_score: int = None
+    home_team_city: str = None
+    away_team_city: str = None
+    home_team_name: str = None
+    away_team_name: str = None
+    start_date: str = None
+    location: str = None
+    last_play: Any = None
+    team_with_possession: int = None
+    time_remaining_status: str = None
+    sport: str = None
+    status: str = None
+    description: str = None
+    full_description: str = None
+    exceptional_messages: List = None
+    series_type: int = None
+    number_of_games_in_series: int = None
+    series_info: Any = None
+    home_team_competition_ordinal: int = None
+    away_team_competition_ordinal: int = None
+    home_team_competition_count: int = None
+    away_team_competition_count: int = None
 
 
 @attr.s(auto_attribs=True)
 class GameStyleDocument:   
-    game_style_id: int
-    sport_id: int
-    sort_order: int
-    name: str
-    abbreviation: str
-    description: str
-    is_enabled: bool
-    attributes: Any
+    game_id: int = None
+    game_style_id: int = None
+    sport_id: int = None
+    sort_order: int = None
+    name: str = None
+    abbreviation: str = None
+    description: str = None
+    is_enabled: bool = None
+    attributes: Any = None
+
+
+@attr.s(auto_attribs=True)
+class GameSetDocument:   
+    game_set_key: str
+    competitions: List[CompetitionDocument]
+    game_styles: List[GameStyleDocument]
+    contest_start_time_suffix: Any = None
+    sort_order: int = None
+    min_start_time: str = None
+    tag: str = None
 
 
 @attr.s(auto_attribs=True)
@@ -180,6 +121,91 @@ class GameTypeDocument:
     game_style: List[GameStyleDocument]
     is_season_long: bool
 
+
+@attr.s(auto_attribs=True)
+class ContestDocument:   
+	uc: int = None
+	ec: int = None
+	mec: int = None
+	fpp: int = None
+	s: int = None
+	n: str = None
+	attr: Dict = None
+	nt: int = None
+	m: int = None
+	a: int = None
+	po: float = None
+	pd: Dict = None
+	tix: bool = None
+	sdstring: str = None
+	sd: str = None
+	id: int = None
+	tmpl: int = None
+	pt: int = None
+	so: int = None
+	fwt: bool = None
+	is_owner: bool = None
+	start_time_type: int = None
+	dg: int = None
+	ulc: int = None
+	cs: int = None
+	game_type: str = None
+	ssd: Any = None
+	dgpo: float = None
+	cso: int = None
+	ir: int = None
+	rl: bool = None
+	rlc: int = None
+	rll: int = None
+	sa: bool = None
+	free_with_crowns: bool = None
+	crown_amount: int = None
+	is_bonus_finalized: bool = None
+	is_snake_draft: bool = None
+
+@attr.s(auto_attribs=True)
+class DraftGroupDocument:   
+    draft_group_id: int
+    contest_type_id: int = None
+    start_date: str = None
+    start_date_est: str = None
+    sort_order: int = None
+    draft_group_tag: str = None
+    game_type_id: int = None
+    game_type: Any = None
+    sport_sort_order: int = None
+    sport: str = None
+    game_count: int = None
+    contest_start_time_suffix: Any = None
+    contest_start_time_type: int = None
+    games: Any = None
+    draft_group_series_id: int = None
+    game_set_key: str = None
+    allow_ugc: bool = None
+
+
+@attr.s(auto_attribs=True)
+class GetContestsDocument:   
+    contests: List[ContestDocument] = None
+    tournaments: List[TournamentDocument] = None
+    draft_groups: List[DraftGroupDocument] = None
+    game_sets: List [GameSetDocument] = None
+    game_types: List [GameTypeDocument] = None
+    user_prizes: List[Any] = None
+    marketing_offers: Any = None
+    direct_challenge_modal: Any = None
+    deposit_transaction: Any = None
+    show_raf_link: Any = None
+    prize_redemption_model: Any = None
+    prize_redemption_pop: Any = None
+    use_raptor_head_to_head: Any = None
+    use_js_web_lobby_modals: Any = None
+    show_game_style_filter: Any = None
+    sport_menu_items: Any = None
+    user_geo_location: Any = None
+    show_ads: Any = None
+    is_vip: Any = None
+    ads_enabled: Any = None
 
 @attr.s(auto_attribs=True)
 class PlayerDocument:   
@@ -214,29 +240,13 @@ class PlayerDocument:
 
 
 @attr.s(auto_attribs=True)
-class TournamentDocument:   
-    tournament_key: str
-    name: str
-    draft_group_id: int
-    is_visible: bool
-    sort_order: int
-    status: int
-    entrants: int
-    contest_attributes: List
-    maximum_entries: int
-    maximum_entries_per_user: int
-    entry_fee: float
-    accepted_tickets: List
-    total_payouts: float
-    payout_descriptions: List
-    fpp_award: int
-    payout_summaries: List
-    sport_id: int
-    crown_amount: int
-    ticket_only_entry: bool
-    start_time: str
-    start_time_type: str
-    game_set_key: str
-
+class DraftablesDocument:   
+    draftables: List[PlayerDocument]
+    competitions: List[CompetitionDocument]
+    teams_without_competitions: List
+    draft_alerts: List
+    draft_stats: List
+    player_game_attributes: List
+    error_status: List
 
 
