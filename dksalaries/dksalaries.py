@@ -21,7 +21,7 @@ Example:
 
 """
 import logging
-from typing import List
+from typing import Container, List
 
 import browser_cookie3
 import cattr
@@ -181,10 +181,42 @@ class Parser:
 
         # create the object
         o = cattr.structure_attrs_fromdict(newd, GetContestsDocument)
-        
+
+        # handle the ContestDocument objects
+        new_competitions = []
+        for idx, gs in enumerate(popped['game_sets']):
+            co = []
+            for comp in gs['Competitions']:
+                newco = {camel_to_snake(k): v for k, v in comp.items() if v is not None}
+                co.append(cattr.structure_attrs_fromdict(newco, CompetitionDocument))
+            new_competitions.append(co)
+            _ = popped['game_sets'][idx].pop('Competitions')
+
+        # handle the GameStyleDocuments
+        new_gamestyles = []
+        for idx, gset in enumerate(popped['game_sets']):
+            newgstyles = []
+            for gstyle in gset['GameStyles']:
+                newgstyle = {camel_to_snake(k): v for k, v in gstyle.items() if v is not None}
+                newgstyles.append(cattr.structure_attrs_fromdict(newgstyle, GameStyleDocument))
+            new_gamestyles.append(newgstyles)
+            _ = popped['game_sets'][idx].pop('GameStyles')
+
         # now replace the containers with the correct objects
         for k, v in mapping.items():
-            setattr(o, k, self.container_objects(popped[k], v))
+
+            # now create the new objects
+            newobjs = self.container_objects(popped[k], v)
+
+            if k == 'game_sets':
+                for idx, comp in enumerate(new_competitions):
+                    newobjs[idx].competitions = comp
+
+                for idx, gstyle in enumerate(new_gamestyles):
+                    newobjs[idx].game_styles = gstyle
+
+            # add them to the parent object
+            setattr(o, k, newobjs)
 
         return o
 

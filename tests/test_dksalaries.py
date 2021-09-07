@@ -1,7 +1,8 @@
+# dksalaries/tests/test_dksalaries.py
 # -*- coding: utf-8 -*-
-# test_dksalaries.py
+# Copyright (C) 2021 Eric Truett
+# Licensed under the MIT License
 
-from dksalaries.util import camel_to_snake
 import json
 import random
 from typing import List
@@ -12,6 +13,7 @@ import pytest
 
 from dksalaries import Parser
 from dksalaries.documents import *
+from dksalaries.util import camel_to_snake
 
 
 @pytest.fixture

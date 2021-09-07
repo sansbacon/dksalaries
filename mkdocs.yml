@@ -1,0 +1,30 @@
+site_name: dksalaries
+site_url: https://sansbacon.github.io/dksalaries
+site_description: python library to scrape, parse, and analyze dk salaries
+site_author: Eric Truett
+repo_url: https://github.com/sansbacon/dksalaries
+
+theme:
+  name: material
+
+plugins:
+  - search
+  - mkdocstrings
+
+markdown_extensions:
+- toc:
+    permalink: true
+- admonition
+- codehilite
+- extra
+- pymdownx.superfences
+- pymdownx.tabbed
+
+nav:
+- dksalaries: index.md
+- features.md
+- Code Reference:
+    - scraper: scraper-reference.md
+    - parser: parser-reference.md
+    - documents: documents-reference.md
+    - util: util-reference.md

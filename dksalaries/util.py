@@ -3,10 +3,12 @@
 # Copyright (C) 2021 Eric Truett
 # Licensed under the MIT License
 import collections
-from inspect import getmembers
+import datetime
 import re
-from types import FunctionType
+from typing import Any, Callable, Dict, List
 
+from dateutil.parser import parse
+import pytz
 
 
 def attr_boiler(d: dict) -> None:
@@ -44,11 +46,50 @@ def camel_to_snake(s: str) -> str:
     return re.sub('([a-z0-9])([A-Z])', r'\1_\2', s).lower()
 
 
-def map_nested_dicts(ob, func):
+def flatten(t: List[List[Any]]) -> List[Any]:
+    """Flattens nested lists
+    
+    Args:
+        t (List[List]): the nested lists
+
+    Returns:
+        List[Any]
+
+    """
+    return [item for sublist in t for item in sublist]
+
+
+def map_nested_dicts(ob: Dict[str, Any], func: Callable) -> Dict[str, Any]:
+    """Applies functions to all keys in nested dict"""
     if isinstance(ob, collections.Mapping):
-        return {func(k): v for k, v in ob.iteritems()}
+        return {func(k): v for k, v in ob.items()}
     else:
         return func(ob)
+
+
+def parse_dktime(s: str, as_local: bool = False, tz: str = None) -> datetime.datetime:
+    """Parses dk time strings
+    
+    Args:
+        s (str): the datestring
+        as_local (bool): UTC or localtime
+        tz (str): timezone str, e.g. 'America/Chicago'
+
+    Returns:
+        datetime.datetime
+
+    """
+    if s.endswith('Z'):
+        dt = parse(s)
+    elif s.startswith('/Date'):
+        epoch = int(''.join([c for c in s if c.isnumeric()])) / 1000
+        dt = datetime.datetime.fromtimestamp(epoch, tz=pytz.utc)
+    else:
+        raise ValueError(f'Invalid datestring: {s}')
+    if as_local:
+        local_tz = pytz.timezone(tz)
+        return dt.astimezone(local_tz)
+    return dt
 
 
 def striptype(v):
@@ -59,13 +100,6 @@ def striptype(v):
 
     Returns:
         str
-
-    Examples
-    >>>striptype(3)
-    'int'
-
-    >>>striptype(None)
-    'Any'
 
     """
     if v is None:
