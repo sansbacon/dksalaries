@@ -6,13 +6,60 @@
 """documents.py: object model for draftkings API"""
 
 import datetime
+import functools
 import logging
-from typing import Any, Dict, List, Sequence, Tuple
+from typing import Any, Dict, List, Sequence, Set, Tuple
 
 import attr, cattr
 
 from .util import flatten, parse_dktime
 from nflnames import standardize_team_code, standardize_team_name
+
+
+CONTEST_TYPE_IDS = {
+  1: ('Classic', 'SalaryCap'),
+  96: ('Showdown Captain Mode', 'SalaryCap'),
+  159: ('Madden Showdown Captain Mode', 'SalaryCap'),
+  192: ('Snake Showdown', 'SnakeDraft'),
+  145: ('Best Ball', 'SnakeDraft'),
+  189: ('Snake', 'SnakeDraft'),
+}
+
+GAME_TYPE_IDS = {
+  1: 'Classic',
+  158: 'Classic',
+  50: 'Tiers',
+  51: 'Tiers',
+  52: 'Tiers',
+  53: 'Tiers',
+  54: 'Tiers',
+  55: 'Tiers',
+  101: 'Tiers',
+  102: 'Tiers',
+  103: 'Tiers',
+  104: 'Tiers',
+  105: 'Tiers',
+  96: 'Showdown Captain Mode',
+  159: 'Showdown Captain Mode',
+  108: 'In-Game Showdown H2',
+  110: 'In-Game Showdown Q4',
+  58: 'Showdown',
+  99: 'QB Gunslinger',
+  107: 'Non Late Swap',
+  124: 'Sunday Night Series',
+  145: 'Best Ball',
+  162: 'Best Ball',
+  157: 'Dark Horse Value Pick',
+  163: 'Snake',
+  189: 'Snake',
+  164: 'Snake Showdown',
+  192: 'Snake Showdown',
+}
+
+BEST_BALL_TYPES = tuple([k for k, v in GAME_TYPE_IDS.items() if v == 'Best Ball'])
+CAPTAIN_GAME_TYPES = tuple([k for k, v in GAME_TYPE_IDS.items() if 'Captain' in v])
+CLASSIC_GAME_TYPES = tuple([k for k, v in GAME_TYPE_IDS.items() if v == 'Classic'])
+TIERS_GAME_TYPES = tuple([k for k, v in GAME_TYPE_IDS.items() if v == 'Tiers'])
 
 
 @attr.s(auto_attribs=True)
@@ -134,25 +181,38 @@ class GameSetDocument:
     sort_order: int = None
     min_start_time: str = None
     tag: str = None
+    tz: str = 'America/New_York'
 
     @property
-    def game_style_names(self):
+    def has_classic(self) -> bool:
+        return 'Classic' in self.game_style_names
+
+    @property
+    def game_style_names(self) -> Set[str]:
         return set([i.name for i in self.game_styles])
 
     @property
-    def n_games(self):
+    def n_games(self) -> int:
         return len(self.competitions)
 
-    @property
-    def slate_starts(self):
-        if self.min_start_time:
-            return parse_dktime(self.min_start_time)
-        return None
-
-    @property
-    def slate_teams(self):
+    @functools.cached_property
+    def slate_teams(self) -> List[str]:
         return [standardize_team_code(item) 
                 for item in flatten([c.team_codes for c in self.competitions])]
+
+    @functools.cached_property
+    def start_end_time(self) -> Tuple[datetime.datetime, datetime.datetime]:
+        """Gets the min and max start time for a gameset
+        
+        Args:
+            None
+
+        Returns:
+            Tuple[datetime.datetime, datetime.datetime]
+
+        """
+        times = [parse_dktime(comp.start_date, True, self.tz) for comp in self.competitions]
+        return (min(times), max(times))
 
 
 @attr.s(auto_attribs=True)
@@ -219,6 +279,38 @@ class DraftGroupDocument:
 
 
 @attr.s(auto_attribs=True)
+class PlayerDocument:   
+    draftable_id: int
+    first_name: str
+    last_name: str
+    display_name: str
+    short_name: str
+    player_id: int
+    player_dk_id: int
+    team_id: int
+    team_abbreviation: str
+    position: str
+    roster_slot_id: int
+    salary: int
+    status: str
+    is_swappable: bool = False
+    is_disabled: bool = False
+    news_status: str = None
+    player_image50: str = None
+    player_image160: str = None
+    alt_player_image50: str = None
+    alt_player_image160: str = None
+    draft_stat_attributes: List = attr.Factory(list)
+    player_attributes: List = attr.Factory(list)
+    team_league_season_attributes: List = attr.Factory(list)
+    player_game_attributes: List = attr.Factory(list)
+    draft_alerts: List = attr.Factory(list)
+    player_game_hash: str = None
+    competition: List = attr.Factory(list)
+    competitions: List = attr.Factory(list)
+
+
+@attr.s(auto_attribs=True)
 class PlayerSalaryDocument:
     draftable_id: int
     player_id: int
@@ -252,7 +344,6 @@ class GetContestsDocument:
     draft_groups: List[DraftGroupDocument] = attr.Factory(list)
     game_sets: List [GameSetDocument] = attr.Factory(list)
     game_types: List [GameTypeDocument] = attr.Factory(list)
-    slates: List [SlateDocument] = attr.Factory(list)
     user_prizes: List[Any] = attr.Factory(list)
     marketing_offers: Any = None
     direct_challenge_modal: Any = None
@@ -268,6 +359,36 @@ class GetContestsDocument:
     show_ads: Any = None
     is_vip: Any = None
     ads_enabled: Any = None
+
+    @functools.cached_property
+    def classic_slates(self) -> List[SlateDocument]:
+        """Gets classic slates from GetContestDocument"""
+        slate_documents = []
+
+        # step one: need to iterate over slates (game_sets)
+        for gset in [item for item in self.game_sets if item.has_classic]:
+            # step one: find qualifying draft groups
+            draft_groups = [dg for dg in self.draft_groups if
+                            dg.game_set_key == gset.game_set_key and
+                            dg.game_type_id == 1]
+            start, end = gset.start_end_time
+            ims = all((start.hour == 13, end.hour == 16, start.weekday() == 6, end.weekday() == 6))
+
+            o = SlateDocument(
+                sport='NFL',
+                n_games=gset.n_games,
+                dg=draft_groups,
+                game_set_key=gset.game_set_key,
+                start_date=start,
+                end_date=end,
+                is_main_slate=ims,
+                slate_teams=gset.slate_teams,
+                slate_players=None
+            )
+
+            slate_documents.append(o)
+
+        return slate_documents
 
     def find_contest(self, filters: dict, contests: List[ContestDocument] = None) -> List[ContestDocument]:
         """Finds contests according to filters
@@ -315,38 +436,6 @@ class GetContestsDocument:
                 i.sdstring == 'Sun 1:00PM' and 
                 i.game_type == 'Classic'and
                 'Million' in i.n][0]
-
-
-@attr.s(auto_attribs=True)
-class PlayerDocument:   
-    draftable_id: int
-    first_name: str
-    last_name: str
-    display_name: str
-    short_name: str
-    player_id: int
-    player_dk_id: int
-    team_id: int
-    team_abbreviation: str
-    position: str
-    roster_slot_id: int
-    salary: int
-    status: str
-    is_swappable: bool = False
-    is_disabled: bool = False
-    news_status: str = None
-    player_image50: str = None
-    player_image160: str = None
-    alt_player_image50: str = None
-    alt_player_image160: str = None
-    draft_stat_attributes: List = attr.Factory(list)
-    player_attributes: List = attr.Factory(list)
-    team_league_season_attributes: List = attr.Factory(list)
-    player_game_attributes: List = attr.Factory(list)
-    draft_alerts: List = attr.Factory(list)
-    player_game_hash: str = None
-    competition: List = attr.Factory(list)
-    competitions: List = attr.Factory(list)
 
 
 @attr.s(auto_attribs=True)

@@ -85,6 +85,14 @@ def test_gameset_slate_teams(gc):
     assert len(gs.slate_teams) == 26
 
 
+def test_get_start_end(gc: GetContestsDocument):
+    """Testing structure of competition"""
+    for gs in gc.game_sets:
+        se = gs.start_end_time
+        assert isinstance(se, tuple)
+        assert isinstance(se[0], datetime.datetime)
+
+
 ########################################
 # ContestDocument
 ########################################
@@ -132,3 +140,14 @@ def test_findmainslate(gc: GetContestsDocument, tprint):
     v = gc.find_main_slate()
     assert v == (53019, 'FBE061E5C4BADEC29A2BF302DE6DC97A')
 
+
+def test_slates(gc: GetContestsDocument, tprint):
+    """Tests slates method"""
+    cs = gc.classic_slates
+    s = cs[0]
+    assert isinstance(cs, list)
+    assert isinstance(s, SlateDocument)
+    assert s.is_main_slate
+
+    for item in cs:
+        tprint((item.start_date, item.end_date, item.is_main_slate))
