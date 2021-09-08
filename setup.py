@@ -19,6 +19,17 @@ def run():
           packages=find_packages(),
           package_data={'tests': ["data/*.json"]},
           entry_points={'console_scripts': ['salaries=scripts.getsalaries:run']},
+          install_requires=[
+            'requests',
+            'requests_cache',
+            'browser_cookie3',
+            'attrs',
+            'cattrs',
+            'python-dateutil',
+            'pytz',
+            'nflnames',
+            'rapidfuzz'
+          ],
           zip_safe=False)
 
 

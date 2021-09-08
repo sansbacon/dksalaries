@@ -25,7 +25,11 @@ from typing import Container, List
 
 import browser_cookie3
 import cattr
-import requests_cache
+
+try:
+    import requests_cache
+except:
+    import requests
 
 from .constants import *
 from .documents import *
@@ -44,7 +48,11 @@ class Scraper:
 
     """
     def __init__(self):
-        self.s = requests_cache.CachedSession('dksalaries_scraper')
+        try:
+            self.s = requests_cache.CachedSession('dksalaries_scraper')
+        except:
+            self.s = requests.Session()
+            
         self.s.headers.update({
             'Connection': 'keep-alive',
             'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64)',
