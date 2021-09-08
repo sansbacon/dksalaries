@@ -25,7 +25,7 @@ from typing import Container, List
 
 import browser_cookie3
 import cattr
-from requests_html import HTMLSession
+import requests_cache
 
 from .constants import *
 from .documents import *
@@ -44,7 +44,7 @@ class Scraper:
 
     """
     def __init__(self):
-        self.s = HTMLSession()
+        self.s = requests_cache.CachedSession('dksalaries_scraper')
         self.s.headers.update({
             'Connection': 'keep-alive',
             'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64)',

@@ -18,6 +18,7 @@ def run():
           license="MIT",
           packages=find_packages(),
           package_data={'tests': ["data/*.json"]},
+          entry_points={'console_scripts': ['salaries=scripts.getsalaries:run']},
           zip_safe=False)
 
 
